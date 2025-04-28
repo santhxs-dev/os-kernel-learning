@@ -1,9 +1,23 @@
 ORG 0
 BITS 16
 
-jmp 0x7c0:start
+_start:
+  jmp short start
+  nop
+
+  times 33 db 0
 
 start:
+  jmp 0x7c0:step2
+
+handle_zero:
+  mov ah, 0eh
+  mov bx, 0x00
+  mov al, 'A'
+  int 0x10
+  iret
+
+step2:
   cli ; clear interrupts
   mov ax, 0x7c0
   mov ds, ax
@@ -12,6 +26,11 @@ start:
   mov ss, ax
   mov sp, 0x7c00
   sti ; enables interrupts
+
+  mov word[ss:0x00], handle_zero
+  mov word[ss:0x02], 0x7c0
+
+  int 0
 
   mov si, message
   call print
