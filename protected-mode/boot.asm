@@ -1,4 +1,4 @@
-ORG 0
+ORG 0x7c00
 BITS 16
 
 _start:
@@ -8,35 +8,48 @@ _start:
   times 33 db 0
 
 start:
-  jmp 0x7c0:step2
+  jmp 0:step2
 
 step2:
   cli ; clear interrupts
-  mov ax, 0x7c0
+  mov ax, 0x00
   mov ds, ax
   mov es, ax
-  mov ax, 0x00
   mov ss, ax
   mov sp, 0x7c00
   sti ; enables interrupts
-
-  mov ah, 02h ; read sector command
-  mov al, 1   ; one sector to read
-  mov ch, 0   ; cylinder low eight bits
-  mov cl, 2   ; read sector two
-  mov dh, 0   ; head number
-  mov bx, buffer
-  int 0x13
-  jc error
-
-  mov si, buffer
-  call print
   
   jmp $
-error:
-  mov si, error_message
-  call print
-  jmp $
+
+; GDT
+gdt_start:
+gdt_null:
+  dd 0x0
+  dd 0x0
+
+; offset 0x8
+gdt_code:       ; CS should point to this
+  dw 0xffff     ; segment limits first 0-15 bits
+  dw 0          ; base first 0-15 bits
+  db 0          ; base 16-23 bits
+  db 0x9a       ; access byte
+  db 11001111b  ; high 4 bits flags and the low 4 bits flags
+  db 0          ; base 24-31 bits
+
+; offset 0x10
+gdt_data:       ; DS, SS, ES, FS, GS
+  dw 0xffff     ; segment limits first 0-15 bits
+  dw 0          ; base first 0-15 bits
+  db 0          ; base 16-23 bits
+  db 0x92       ; access byte
+  db 11001111b  ; high 4 bits flags and the low 4 bits flags
+  db 0          ; base 24-31 bits
+
+gdt_end:
+
+gdt_descriptor:
+  dw gdt_end - gdt_start-1
+  dd gdt_start
 
 print:
   mov bx, 0
@@ -54,9 +67,5 @@ print_char:
   int 0x10
   ret
 
-error_message: db 'Failed to load sector', 0
-
 times 510-($ - $$) db 0
 dw 0xAA55
-
-buffer:
