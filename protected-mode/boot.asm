@@ -1,6 +1,9 @@
 ORG 0x7c00
 BITS 16
 
+CODE_SEG equ gdt_code - gdt_start
+DATA_SEG equ gdt_data - gdt_start
+
 _start:
   jmp short start
   nop
@@ -19,10 +22,17 @@ step2:
   mov sp, 0x7c00
   sti ; enables interrupts
   
-  jmp $
+.load_protected:
+  cli
+  lgdt[gdt_descriptor]
+  mov eax, cr0
+  or eax, 0x1
+  mov cr0, eax
+  jmp CODE_SEG:load32
 
 ; GDT
 gdt_start:
+
 gdt_null:
   dd 0x0
   dd 0x0
@@ -51,21 +61,17 @@ gdt_descriptor:
   dw gdt_end - gdt_start-1
   dd gdt_start
 
-print:
-  mov bx, 0
-.loop:
-  lodsb
-  cmp al, 0
-  je .done
-  call print_char
-  jmp .loop
-.done:
-  ret
-
-print_char:
-  mov ah, 0eh
-  int 0x10
-  ret
+[BITS 32]
+load32:
+  mov ax, DATA_SEG
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+  mov ss, ax
+  mov ebp, 0x00200000
+  mov esp, ebp
+  jmp $
 
 times 510-($ - $$) db 0
 dw 0xAA55
