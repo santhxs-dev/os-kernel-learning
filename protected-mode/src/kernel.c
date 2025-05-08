@@ -27,6 +27,7 @@ void terminal_writechar(char c, char colour)
     }
     
     terminal_putchar(terminal_col, terminal_row, c, colour);
+    
     terminal_col += 1;
     if (terminal_col >= VGA_WIDTH)
     {
@@ -40,6 +41,7 @@ void terminal_initialize()
     video_mem = (uint16_t*)(0xB8000);
     terminal_row = 0;
     terminal_col = 0;
+    
     for (int y = 0; y < VGA_HEIGHT; y++)
     {
         for (int x = 0; x < VGA_WIDTH; x++)
