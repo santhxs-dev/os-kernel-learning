@@ -18,7 +18,11 @@ void idt_set(int interrupt_no, void* address)
     desc->offset_1 = (uint32_t) address & 0x0000ffff;
     desc->selector = KERNEL_CODE_SELECTOR;
     desc->zero = 0x00;
-    desc->type_attr = 0xEE;
+    desc->type_attr = 0xEE; // 0xEE - 11101110
+                            // Type = 1110 (Interrupt Gate)  1110
+                            // S = 0                         0
+                            // DPL = 11 (Level 3)            11
+                            // P = 1                         1
     desc->offset_2 = (uint32_t) address >> 16;
 }
 
