@@ -10,7 +10,7 @@ insb:
     mov ebp, esp
 
     xor eax, eax
-    mov edx, [ebp+8]
+    mov edx, [ebp+8] ; port
     in al, dx
 
     pop ebp
