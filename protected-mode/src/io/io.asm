@@ -9,12 +9,12 @@ insb:
     push ebp
     mov ebp, esp
 
-    xor eax, eax
-    mov edx, [ebp+8]
-    in al, dx
+    xor eax, eax     ; set to zero
+    mov edx, [ebp+8] ; port
+    in al, dx        ; byte
 
     pop ebp
-    ret
+    ret              ; eax is the ret value
 
 insw:
     push ebp
@@ -22,7 +22,7 @@ insw:
 
     xor eax, eax
     mov edx, [ebp+8]
-    in ax, dx
+    in ax, dx        ; word
 
     pop ebp
     ret
