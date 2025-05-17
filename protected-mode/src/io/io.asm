@@ -20,8 +20,8 @@ insw:
     push ebp
     mov ebp, esp
 
-    xor eax, eax
-    mov edx, [ebp+8]
+    xor eax, eax     ; set to zero
+    mov edx, [ebp+8] ; port
     in ax, dx        ; word
 
     pop ebp
@@ -31,8 +31,8 @@ outb:
     push ebp
     mov ebp, esp
 
-    mov eax, [ebp+12]
-    mov edx, [ebp+8]
+    mov eax, [ebp+12] ; val
+    mov edx, [ebp+8]  ; port
     out dx, al
 
     pop ebp
@@ -42,8 +42,8 @@ outw:
     push ebp
     mov ebp, esp
 
-    mov eax, [ebp+12]
-    mov edx, [ebp+8]
+    mov eax, [ebp+12] ; val
+    mov edx, [ebp+8]  ; port
     out dx, ax
 
     pop ebp

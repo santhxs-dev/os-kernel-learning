@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "kernel.h": "c"
+        "kernel.h": "c",
+        "memory.h": "c",
+        "cstdint": "c",
+        "io.h": "c"
     }
 }
