@@ -3,6 +3,8 @@
         "kernel.h": "c",
         "memory.h": "c",
         "cstdint": "c",
-        "io.h": "c"
+        "io.h": "c",
+        "stddef.h": "c",
+        "bitset": "c"
     }
 }
