@@ -5,6 +5,8 @@
         "cstdint": "c",
         "io.h": "c",
         "stddef.h": "c",
-        "bitset": "c"
+        "bitset": "c",
+        "heap.h": "c",
+        "kheap.h": "c"
     }
 }

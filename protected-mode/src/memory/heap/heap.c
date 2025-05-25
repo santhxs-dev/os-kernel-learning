@@ -68,70 +68,90 @@ static uint32_t heap_align_value_to_upper(uint32_t val)
 
 static int heap_get_entry_type(HEAP_BLOCK_TABLE_ENTRY entry)
 {
-    return entry & 0x0f;
+    return entry & 0x0f; // Give us the first four bits
+                // 1111
 }
 
 int heap_get_start_block(struct heap* heap, uint32_t total_blocks)
 {
     struct heap_table* table = heap->table;
-    int bc = 0;
-    int bs = -1;
+    int bc = 0;  // Block count - number of consecutive free blocks found
+    int bs = -1; // Block start - index of the free starting block found
 
     for (size_t i = 0; i < table->total; i++)
-    {
+    {                                              // 0x00
         if (heap_get_entry_type(table->entries[i]) != HEAP_BLOCK_TABLE_ENTRY_FREE)
         {
-            bc = 0;
-            bs = -1;
+            bc = 0; // Reset: not a free block
+            bs = -1; // Reset: we haven't found it yet
             continue;
         }
 
         // If this is the first block
         if (bs == -1)
         {
-            bs = i;
+            bs = i; // Saves the starting position
         }
-        bc++;
+        bc++; // Count how many consecutive free blocks we found
+
+        // If we find enough free blocks
         if (bc == total_blocks)
         {
             break;
         }
     }
 
+    // If we don't find any free blocks enough
     if (bs == -1)
     {
         return -ENOMEM;
     }
     
+    // Returns the index of the first free block found
     return bs;
 
 }
 
 void* heap_block_to_address(struct heap* heap, int block)
-{
-    return heap->saddr + (block * PEACHOS_HEAP_BLOCK_SIZE);
+{  
+                        // 8192
+    return heap->saddr + (block * PEACHOS_HEAP_BLOCK_SIZE) ;
 }
 
 void heap_mark_blocks_taken(struct heap* heap, int start_block, int total_blocks)
 {
-    int end_block = (start_block + total_blocks)-1;
-    
+    // Calculate the last block of the allocation.
+    // Example: start_block = 0, total_blocks = 4 -> end_block = 3 (blocks 0,1,2,3).
+    int end_block = (start_block + total_blocks) - 1;
+
+    // Set the initial entry with the TAKEN flag and mark it as the FIRST block of the allocation.
     HEAP_BLOCK_TABLE_ENTRY entry = HEAP_BLOCK_TABLE_ENTRY_TAKEN | HEAP_BLOCK_IS_FIRST;
+
+    // If the allocation spans more than one block, add the HAS_NEXT flag.
     if (total_blocks > 1)
     {
         entry |= HEAP_BLOCK_HAS_NEXT;
     }
 
+    // Iterate over all blocks in the allocation range.
     for (int i = start_block; i <= end_block; i++)
     {
+        // Mark the current block with the current entry value.
         heap->table->entries[i] = entry;
+
+        // For the next iteration (subsequent blocks), set the entry to TAKEN only.
+        // Only the first block has the IS_FIRST flag.
         entry = HEAP_BLOCK_TABLE_ENTRY_TAKEN;
-        if (i != end_block -1)
+
+        // If the current block is not the second to last block, set HAS_NEXT.
+        // This ensures that all blocks except the last have HAS_NEXT.
+        if (i != end_block - 1)
         {
             entry |= HEAP_BLOCK_HAS_NEXT;
         }
     }
 }
+
 
 void* heap_malloc_blocks(struct heap* heap, uint32_t total_blocks)
 {
@@ -159,6 +179,8 @@ void heap_mark_blocks_free(struct heap* heap, int starting_block)
     {
         HEAP_BLOCK_TABLE_ENTRY entry = table->entries[i];
         table->entries[i] = HEAP_BLOCK_TABLE_ENTRY_FREE;
+
+        // If doesn't has the next bit set
         if (!(entry & HEAP_BLOCK_HAS_NEXT))
         {
             break;
@@ -169,12 +191,17 @@ void heap_mark_blocks_free(struct heap* heap, int starting_block)
 int heap_address_to_block(struct heap* heap, void* address)
 {
     return ((int)(address - heap->saddr)) / PEACHOS_HEAP_BLOCK_SIZE;
+    //          (0x1001000 - 0x1000000)   / 4096
+    //          (16781312  -  16777216)   / 4096
+    //          = 4096 / 4096
+    //          = 1
 }
 
 void* heap_malloc(struct heap* heap, size_t size)
 {
-    size_t aligned_size = heap_align_value_to_upper(size);
-    uint32_t total_blocks = aligned_size / PEACHOS_HEAP_BLOCK_SIZE;
+    // e.g. with 5000 
+    size_t aligned_size = heap_align_value_to_upper(size);          // 8192
+    uint32_t total_blocks = aligned_size / PEACHOS_HEAP_BLOCK_SIZE; // 2
     return heap_malloc_blocks(heap, total_blocks);
 }
 
