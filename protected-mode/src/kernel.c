@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include "idt/idt.h"
 #include "memory/heap/kheap.h"
+#include "memory/paging/paging.h"
+#include "string/string.h"
+#include "disk/disk.h"
+#include "fs/pparser.h"
+#include "disk/streamer.h"
 
 uint16_t* video_mem = 0;
 uint16_t terminal_row = 0;
@@ -49,18 +54,6 @@ void terminal_initialize()
     }   
 }
 
-
-size_t strlen(const char* str)
-{
-    size_t len = 0;
-    while(str[len])
-    {
-        len++;
-    }
-
-    return len;
-}
-
 void print(const char* str)
 {
     size_t len = strlen(str);
@@ -70,6 +63,8 @@ void print(const char* str)
     }
 }
 
+static struct paging_4gb_chunk* kernel_chunk = 0;
+
 void kernel_main()
 {
     terminal_initialize();
@@ -78,22 +73,22 @@ void kernel_main()
     // Initialize the heap
     kheap_init();
 
+    // Search and initialize the disks
+    disk_search_and_init();
+
     // Initialize the interrupt descriptor table
     idt_init();
 
-    /*
-    void* ptr = kmalloc(50);    // (void *) 0x1000000
-    void* ptr2 = kmalloc(5000); // (void *) 0x1001000
-    void* ptr3 = kmalloc(5000); // (void *) 0x1003000
-    kfree(ptr);
-    void* ptr4 = kmalloc(50);   // (void *) 0x1000000
+    // Setup paging
+    kernel_chunk = paging_new_4gb(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+    
+    // Switch to kernel paging chunk
+    paging_switch(paging_4gb_chunk_get_directory(kernel_chunk));
 
-    if (ptr || ptr2 || ptr3 || ptr4)
-    {
-        
-    }
-    */
+    // Enable paging
+    enable_paging();
 
      // Enable the system interrupts
      enable_interrupts();
+     
 }

@@ -1,6 +1,6 @@
-FILES = ./build/kernel.asm.o ./build/kernel.o ./build/idt/idt.asm.o ./build/idt/idt.o ./build/memory/memory.o ./build/io/io.asm.o ./build/memory/heap/heap.o ./build/memory/heap/kheap.o
+FILES = ./build/kernel.asm.o ./build/kernel.o ./build/disk/disk.o ./build/disk/streamer.o ./build/fs/pparser.o ./build/string/string.o ./build/idt/idt.asm.o ./build/idt/idt.o ./build/memory/memory.o ./build/io/io.asm.o ./build/memory/heap/heap.o ./build/memory/heap/kheap.o ./build/memory/paging/paging.o ./build/memory/paging/paging.asm.o
 INCLUDES = -I./src
-FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc 
+FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
 
 all: ./bin/boot.bin ./bin/kernel.bin
 	rm -rf ./bin/os.bin
@@ -18,7 +18,7 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./build/kernel.asm.o: ./src/kernel.asm
 	nasm -f elf -g ./src/kernel.asm -o ./build/kernel.asm.o
 
-./build/kernel.o: src/kernel.c
+./build/kernel.o: ./src/kernel.c
 	i686-elf-gcc $(INCLUDES) $(FLAGS) -std=gnu99 -c ./src/kernel.c -o ./build/kernel.o
 
 ./build/idt/idt.asm.o: ./src/idt/idt.asm
@@ -39,20 +39,43 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./build/memory/heap/kheap.o: ./src/memory/heap/kheap.c
 	i686-elf-gcc $(INCLUDES) -I./src/memory/heap $(FLAGS) -std=gnu99 -c ./src/memory/heap/kheap.c -o ./build/memory/heap/kheap.o
 
+./build/memory/paging/paging.o: ./src/memory/paging/paging.c
+	i686-elf-gcc $(INCLUDES) -I./src/memory/paging $(FLAGS) -std=gnu99 -c ./src/memory/paging/paging.c -o ./build/memory/paging/paging.o
+
+./build/memory/paging/paging.asm.o: ./src/memory/paging/paging.asm
+	nasm -f elf -g ./src/memory/paging/paging.asm -o ./build/memory/paging/paging.asm.o
+
+./build/disk/disk.o: ./src/disk/disk.c
+	i686-elf-gcc $(INCLUDES) -I./src/disk $(FLAGS) -std=gnu99 -c ./src/disk/disk.c -o ./build/disk/disk.o
+
+./build/disk/streamer.o: ./src/disk/streamer.c
+	i686-elf-gcc $(INCLUDES) -I./src/disk $(FLAGS) -std=gnu99 -c ./src/disk/streamer.c -o ./build/disk/streamer.o
+
+./build/fs/pparser.o: ./src/fs/pparser.c
+	i686-elf-gcc $(INCLUDES) -I./src/fs $(FLAGS) -std=gnu99 -c ./src/fs/pparser.c -o ./build/fs/pparser.o
+
+./build/string/string.o: ./src/string/string.c
+	i686-elf-gcc $(INCLUDES) -I./src/string $(FLAGS) -std=gnu99 -c ./src/string/string.c -o ./build/string/string.o
+
 make run:
 	./build.sh
 	qemu-system-x86_64 -hda ./bin/os.bin
 
-make debug-64:
-	./build.sh
-	gdb -ex "add-symbol-file ./build/kernelfull.o 0x100000" \
-		-ex "target remote | qemu-system-x86_64 -hda ./bin/os.bin -gdb stdio -S"
-
-
-make debug-32:
+make debug:
 	./build.sh
 	gdb -ex "add-symbol-file ./build/kernelfull.o 0x100000" \
 		-ex "target remote | qemu-system-i386 -hda ./bin/os.bin -gdb stdio -S"
+
+# make debug-64:
+# 	./build.sh
+# 	gdb -ex "add-symbol-file ./build/kernelfull.o 0x100000" \
+# 		-ex "target remote | qemu-system-x86_64 -hda ./bin/os.bin -gdb stdio -S"
+
+
+# make debug-32:
+# 	./build.sh
+# 	gdb -ex "add-symbol-file ./build/kernelfull.o 0x100000" \
+# 		-ex "target remote | qemu-system-i386 -hda ./bin/os.bin -gdb stdio -S"
 
 clean:
 	rm -rf ./bin/boot.bin

@@ -7,6 +7,12 @@
         "stddef.h": "c",
         "bitset": "c",
         "heap.h": "c",
-        "kheap.h": "c"
+        "kheap.h": "c",
+        "paging.h": "c",
+        "status.h": "c",
+        "config.h": "c",
+        "disk.h": "c",
+        "string.h": "c",
+        "pparser.h": "c"
     }
 }

@@ -62,9 +62,9 @@ gdt_descriptor:
  
  [BITS 32]
  load32:
-    mov eax, 1
-    mov ecx, 100
-    mov edi, 0x0100000
+    mov eax, 1         ; lba
+    mov ecx, 100       ; total
+    mov edi, 0x0100000 ; destiny
     call ata_lba_read
     jmp CODE_SEG:0x0100000
 
